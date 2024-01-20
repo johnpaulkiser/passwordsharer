@@ -1,5 +1,9 @@
-import type { MetaFunction } from "@remix-run/cloudflare";
-import React from "react";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/cloudflare";
+import { Form, useLoaderData } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 
 export const meta: MetaFunction = () => {
@@ -9,13 +13,41 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+interface Env {
+  URL_KEYS: KVNamespace;
+}
+
+export async function action({ context, request }: ActionFunctionArgs) {
+  console.log("action", context, request);
+
+  const body = await request.formData();
+  const count = body.get("count") as string;
+
+  if (!count) {
+    return new Response("Missing count", { status: 400 });
+  }
+
+  const env = context.env as Env;
+  await env.URL_KEYS.put("count", count);
+  return new Response("OK", { status: 200 });
+}
+
+export function loader({ context }: LoaderFunctionArgs) {
+  const env = context.env as Env;
+  console.log("loader", env.URL_KEYS);
+
+  return env.URL_KEYS.get("count");
+}
+
 export default function Index() {
-  const [count, setCount] = React.useState(0);
+  const data = useLoaderData<typeof loader>();
+  const count = data ? parseInt(data) : 0;
 
   return (
-    <div>
-      <h1 className="text-emerald-700">Welcome to password sharer</h1>
-      <Button onPress={() => setCount((c) => c + 1)}>{count}</Button>
-    </div>
+    <Form method="post">
+      <Button type="submit" value={(count + 1).toString()} name="count">
+        {count}
+      </Button>
+    </Form>
   );
 }
