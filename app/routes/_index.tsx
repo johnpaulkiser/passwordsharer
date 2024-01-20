@@ -4,6 +4,7 @@ import type {
   MetaFunction,
 } from "@remix-run/cloudflare";
 import { Form, json, useFetcher, useLoaderData } from "@remix-run/react";
+import { Loader2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 
 export const meta: MetaFunction = () => {
@@ -38,17 +39,18 @@ export function loader({ context }: LoaderFunctionArgs) {
 export default function Index() {
   const data = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
+  const isLoading = fetcher.state != "idle";
   const count = data ? parseInt(data as string) : 0;
 
   return (
     <fetcher.Form method="post">
       <Button
         type="submit"
-        isDisabled={fetcher.state != "idle"}
+        isDisabled={isLoading}
         value={(count + 1).toString()}
         name="count"
       >
-        {count}
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : count}
       </Button>
     </fetcher.Form>
   );
