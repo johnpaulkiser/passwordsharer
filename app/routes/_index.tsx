@@ -3,7 +3,7 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "@remix-run/cloudflare";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, json, useLoaderData } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 
 export const meta: MetaFunction = () => {
@@ -35,13 +35,20 @@ export async function action({ context, request }: ActionFunctionArgs) {
 export function loader({ context }: LoaderFunctionArgs) {
   const env = context.env as Env;
   console.log("loader", env.URL_KEYS);
-
-  return env.URL_KEYS.get("count");
+  try {
+    return env.URL_KEYS.get("count");
+  } catch (e) {
+    return json({ error: JSON.stringify(e) }, { status: 500 });
+  }
 }
 
 export default function Index() {
   const data = useLoaderData<typeof loader>();
-  const count = data ? parseInt(data) : 0;
+  if (data && typeof data !== "string") {
+    console.error("Invalid data", data);
+  }
+
+  const count = data ? parseInt(data as string) : 0;
 
   return (
     <Form method="post">
