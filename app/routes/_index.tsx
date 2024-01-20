@@ -3,7 +3,7 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "@remix-run/cloudflare";
-import { Form, json, useLoaderData } from "@remix-run/react";
+import { Form, json, useFetcher, useLoaderData } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 
 export const meta: MetaFunction = () => {
@@ -18,8 +18,6 @@ interface Env {
 }
 
 export async function action({ context, request }: ActionFunctionArgs) {
-  console.log("action", context, request);
-
   const body = await request.formData();
   const count = body.get("count") as string;
 
@@ -34,27 +32,24 @@ export async function action({ context, request }: ActionFunctionArgs) {
 
 export function loader({ context }: LoaderFunctionArgs) {
   const env = context.env as Env;
-  console.log("loader", env.URL_KEYS);
-  try {
-    return env.URL_KEYS.get("count");
-  } catch (e) {
-    return json({ error: JSON.stringify(e) }, { status: 500 });
-  }
+  return env.URL_KEYS.get("count");
 }
 
 export default function Index() {
   const data = useLoaderData<typeof loader>();
-  if (data && typeof data !== "string") {
-    console.error("Invalid data", data);
-  }
-
+  const fetcher = useFetcher();
   const count = data ? parseInt(data as string) : 0;
 
   return (
-    <Form method="post">
-      <Button type="submit" value={(count + 1).toString()} name="count">
+    <fetcher.Form method="post">
+      <Button
+        type="submit"
+        isDisabled={fetcher.state != "idle"}
+        value={(count + 1).toString()}
+        name="count"
+      >
         {count}
       </Button>
-    </Form>
+    </fetcher.Form>
   );
 }
