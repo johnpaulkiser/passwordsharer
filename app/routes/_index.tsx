@@ -10,7 +10,7 @@ export const meta: MetaFunction = () => {
 export default function Index() {
   return (
     <div>
-      <h1>Welcome to password sharer</h1>
+      <h1 className="text-emerald-700">Welcome to password sharer</h1>
     </div>
   );
 }
